@@ -1,0 +1,84 @@
+.app-container {
+    min-height: 350px;
+}
+.navbar-expand .navbar-nav {
+    width: 100%;
+    display: block;
+}
+nav.navbar.navbar-expand.navbar-white {
+    padding: 0px;
+    border-bottom: 1px solid #1057a880;
+    height: 32px;
+}
+h4.engg {
+    padding-left: 22px;
+    color: #1057a8 !important;
+    margin-bottom: 0px;
+    padding-top: 6px;
+    position: absolute;
+    left: -96px;
+    top: 1px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.app-container.bg-light.container-fluid {
+    padding-left: 0px;
+
+}
+.home {
+    color: #1057a8;
+    padding: 8px 14px !important;
+}
+.wel {
+    padding-right: 10px;
+}
+.navbar-expand .navbar-nav .nav-link{
+    float:right;
+}
+.react-tabs__tab {
+    padding: 5px 35px  !important;
+    text-align: center;
+    color: #000;
+    text-transform: uppercase  !important;
+    font-weight: 500  !important;
+}
+.react-tabs__tab--selected {
+    background: #fff;
+    border-color: #1057a8 !important;
+    color: #1057a8  !important;
+    border-radius: 5px 5px 0 0;
+    border-top: 2px solid #1057a8  !important;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.react-tabs__tab-list {
+    border-bottom: 1px solid #1057a8;
+}
+span.spc {
+    background-color: #1057a8;
+    color: #fff;
+    padding: 5px;
+    border-radius: 34%;
+    height: 18px;
+    width: auto;
+    display: inline-block;
+    padding-top: 0px;
+    font-size: 12px;
+}
+.pt-4.pb-4{
+    padding-left: 15px !important;
+}
+.ReactModal__Content.ReactModal__Content--after-open {
+    position: absolute;
+    inset: 40px 3px !important;
+    border: 1px solid rgb(204, 204, 204);
+    background: rgb(255, 255, 255);
+    overflow-x: hidden !important;
+    border-radius: 4px;
+    outline: none;
+    padding: 5px !important;
+}
+.logn{
+    height: 35px;
+}
