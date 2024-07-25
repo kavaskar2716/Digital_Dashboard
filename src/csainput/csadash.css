@@ -299,3 +299,6 @@
 i.fa.fa-square {
     padding: 10px;
 }
+.ReactModal__Content.ReactModal__Content--after-open{
+    display:block;
+}

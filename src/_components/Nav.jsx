@@ -15,15 +15,15 @@ function Nav() {
         dispatch(userActions.getAll());
 
         const storedName = localStorage.getItem('UserName');
-        const storedName1 = storedName.replace(/"/g, '');
-    // Set the retrieved value in component state
-    if (storedName1) {
+        // Check if storedName is not null before calling replace
+        const storedName1 = storedName ? storedName.replace(/"/g, '') : '';
 
-      setLocalStorageValue(storedName1);
+        // Set the retrieved value in component state
+        if (storedName1) {
+          setLocalStorageValue(storedName1);
+        }
 
-    }
-
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     // only show nav when logged in
     if (!authUser) return null;

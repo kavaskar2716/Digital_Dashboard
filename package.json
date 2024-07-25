@@ -25,7 +25,8 @@
         "react-scripts": "^5.0.1",
         "react-tabs": "^6.0.2",
         "sweetalert2": "^11.10.5",
-        "yup": "^0.32.11"
+        "yup": "^0.32.11",
+        "homepage": "."
     },
     "scripts": {
         "start": "react-scripts start",

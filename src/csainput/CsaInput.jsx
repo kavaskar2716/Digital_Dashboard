@@ -10,7 +10,6 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
-
 Modal.setAppElement('#root');
 
 const initialCsabState = {
@@ -20,14 +19,16 @@ const initialCsabState = {
   p_position: "",
   p_description: "",
   p_status: "",
-  p_str: "",
+  p_wlink:"",
+  p_str: "ADD",
 };
 
 const initialFileState = {
   p_sid: 0,
+  p_positions: 0,
   p_projects: '',
-  p_images: "",
-  p_str: ""
+  p_images: null,
+  p_str: "ADD"
 };
 
 const CsaInput = () => {
@@ -43,6 +44,8 @@ const CsaInput = () => {
   const [financialYears, setFinancialYears] = useState([]);
   const [files, setFiles] = useState([]);
   const [fileNames, setFileNames] = useState([]);
+  const [slider, setSlider] = useState([]);
+  const [lastPosition, setLastPosition] = useState(0);
   const dispatch = useDispatch();
   const gridRef = useRef();
 
@@ -59,12 +62,7 @@ const CsaInput = () => {
 
   const initializeFinancialYears = () => {
     const currentYear = new Date().getFullYear();
-    const years = [];
-    for (let i = -2; i < 2; i++) {
-      const startYear = currentYear + i;
-      const endYear = startYear + 1;
-      years.push(`${startYear}-${endYear}`);
-    }
+    const years = Array.from({ length: 5 }, (_, i) => `${currentYear - 2 + i}-${currentYear - 1 + i}`);
     setFinancialYears(years);
     setSelectedYear(years[2]);
   };
@@ -72,18 +70,9 @@ const CsaInput = () => {
   const fetchData = async () => {
     try {
       const response = await ApiService.Getdigitalinput();
-      const dataWithIndex = response.Table.map((row, index) => ({
-        index: index + 1,
-        ...row,
-      }));
-      const dataWithIndex1 = response.Table1.map((row, index) => ({
-        index: index + 1,
-        ...row,
-      }));
-      const projectOptions = response.Table.map((row) => ({
-        value: row.Did,
-        label: row.project,
-      }));
+      const dataWithIndex = response.Table.map((row, index) => ({ index: index + 1, ...row }));
+      const dataWithIndex1 = response.Table1.map((row, index) => ({ index: index + 1, ...row }));
+      const projectOptions = response.Table.map((row) => ({ value: row.Did, label: row.project }));
       setProjects(projectOptions);
       setRowData(dataWithIndex);
       setRowData1(dataWithIndex1);
@@ -92,76 +81,51 @@ const CsaInput = () => {
     }
   };
 
-  const ActionButtonsRenderer = ({ data }) => (
-    <>
-      <button onClick={() => editItem(data)} className="nim"><i className="fa fa-edit edi"></i></button>
-      {/* <button onClick={() => openModal(data)} className="vie">View</button> */}
-    </>
-  );
+  const fetchimg = async (did) => {
 
-  const ActionButtonsRenderer1 = ({ data }) => (
-    <>
-      <button onClick={() => editimg(data)} className="nim"><i className="fa fa-edit edi"></i></button>
-      {/* <button onClick={() => openModal(data)} className="vie">View</button> */}
-    </>
-  );
-
-  const openModal = async (row) => {
-    setModalIsOpen(true);
     try {
-      const response = await ApiService.PostCSAJsonChecklist({ serial: row.uut_serial });
-      const processedData = response.Table.filter(c => c !== null);
-      setTableRes(processedData);
+      const response = await ApiService.Getslidermodalimg({ p_Did: did });
+
+      if (response && response.responseModel) {
+        const { PosDetails, ImageUrls } = response.responseModel;
+
+        const sliderimg = PosDetails.map((row, index) => ({
+          index: index + 1,
+          src: ImageUrls[index],
+          ...row,
+        }));
+
+        setSlider(sliderimg);
+        const lastPosition = PosDetails.length > 0 ? PosDetails[PosDetails.length - 1].position : 0;
+        setLastPosition(lastPosition);
+      } else {
+        console.error('Response does not contain PosDetails or ImageUrls');
+      }
     } catch (error) {
-      console.error('Error fetching modal data:', error);
+      console.error('Error fetching data:', error);
     }
   };
 
-  const closeModal = () => {
-    setModalIsOpen(false);
-    setTableRes([]);
+  const updateDatabaseWithNewOrder = async (updatedRowData) => {
+    try {
+      await ApiService.UpdateRowOrder(updatedRowData);
+      console.log('Database updated with new row order');
+    } catch (error) {
+      console.error('Error updating database with new row order:', error);
+    }
   };
 
-  const columnDefs = [
-    {
-      headerName: '#',
-      field: 'actions',
-      cellRenderer: ActionButtonsRenderer,
-      filter: false,
-      sortable: false,
-      minWidth: 50,
-      maxWidth: 50,
-    },
-    { field: 'index', headerName: 'SNO', sortable: true, filter: false, floatingFilter: true, minWidth: 50, maxWidth: 50, rowDrag: true },
-    { field: 'fy_year', headerName: 'FY YEAR', sortable: true, filter: true, floatingFilter: true, minWidth: 150, width: 100, maxWidth: 150 },
-    { field: 'project', headerName: 'NAME OF PROJECT', sortable: true, filter: true, floatingFilter: true, minWidth: 250, width: 250, maxWidth: 250 },
-    { field: 'position', headerName: 'POSITION', sortable: true, filter: true, floatingFilter: true, minWidth: 250, width: 250, maxWidth: 250 },
-    { field: 'description', headerName: 'DESCRIPTION', sortable: true, filter: true, floatingFilter: true, minWidth: 250, width: 250, maxWidth: 250 },
-    { field: 'status', headerName: 'STATUS', sortable: true, filter: true, floatingFilter: true, minWidth: 150, width: 100, maxWidth: 150 },
-  ];
-
-  const columnDefs1 = [
-    {
-      headerName: '#',
-      field: 'actions',
-      cellRenderer: ActionButtonsRenderer1,
-      filter: false,
-      sortable: false,
-      minWidth: 50,
-      maxWidth: 50,
-    },
-    { field: 'index', headerName: 'SNO', sortable: true, filter: false, floatingFilter: true, rowDrag: true },
-    { field: 'fy_year', headerName: 'FY YEAR', sortable: true, filter: true, floatingFilter: true },
-    { field: 'project', headerName: 'NAME OF PROJECT', sortable: true, filter: true, floatingFilter: true },
-    { field: 'images', headerName: 'SLIDER IMAGES', sortable: true, filter: true, floatingFilter: true, minWidth: 400, width: 400, maxWidth: 400 },
-    { field: 'position', headerName: 'POSITION', sortable: true, filter: true, floatingFilter: true, minWidth: 500, width: 500, maxWidth: 500 }
-  ];
-
   const handleInputChange = (event) => {
-    const { name, value, type, checked } = event.target;
-    const inputValue = type === 'checkbox' ? (checked ? 1 : 0) : value;
-    setCsab({ ...csab, [name]: inputValue });
-    setImg({ ...img, [name]: inputValue });
+    const { name, value } = event.target;
+    if (name === 'p_projects') {
+      fetchimg(value);
+    }
+    if (name in csab) {
+      setCsab((prev) => ({ ...prev, [name]: value }));
+    }
+    if (name in img) {
+      setImg((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleFileChange = (event) => {
@@ -169,19 +133,20 @@ const CsaInput = () => {
     const renamedFiles = filesArray.map((file, index) => {
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().replace(/:/g, '-').split('.')[0];
-      const newFileName = `${formattedDate}_${index + 1}.${file.name.split('.').pop()}`;
+      const milliseconds = currentDate.getMilliseconds().toString().padStart(3, '0');
+      const newFileName = `${formattedDate}-${milliseconds}_${index + 1}.${file.name.split('.').pop()}`;
       return new File([file], newFileName, { type: file.type });
     });
-    setFiles(renamedFiles);
-    setFileNames(renamedFiles.map(file => file.name));
+    const sortedRenamedFiles = renamedFiles.sort((a, b) => a.name.localeCompare(b.name));
+    setFiles(sortedRenamedFiles);
+    setFileNames(sortedRenamedFiles.map(file => file.name));
   };
 
   const saveTutorial = async (event) => {
     event.preventDefault();
     try {
-      const updatedCsab = { ...csab, p_fy_year: selectedYear, p_str: 'ADD' };
-      const response = await ApiService.PostDigitalDashboardinput(updatedCsab);
-      console.log('Item saved/updated:', response);
+      const updatedCsab = { ...csab, p_fy_year: selectedYear};
+      await ApiService.PostDigitalDashboardinput(updatedCsab);
       fetchData();
       setCsab(initialCsabState);
     } catch (error) {
@@ -192,23 +157,17 @@ const CsaInput = () => {
   const saveTutorialWithFile = async (event) => {
     event.preventDefault();
     try {
-      //let positionCounter = 0; // Initialize position counter
-
-      const fileUploadPromises = files.map(file => {
+      let currentPosition = lastPosition + 1;
+      const fileUploadPromises = files.map((file, index) => {
         const formData = new FormData();
         formData.append('p_sid', img.p_sid);
         formData.append('p_images', file);
         formData.append('p_digitid', img.p_projects);
-        formData.append('p_position', 0); // Increment position
-        formData.append('p_str', 'ADD');
-
-        //positionCounter++; // Increment the counter for each file
-
+        formData.append('p_position', currentPosition + index);
+        formData.append('p_str', img.p_str);
         return ApiService.UploadFile(formData);
       });
-
       await Promise.all(fileUploadPromises);
-
       fetchData();
       setImg(initialFileState);
       setFiles([]);
@@ -220,21 +179,22 @@ const CsaInput = () => {
 
   const editItem = (item) => {
     setCsab({
-      p_did: item.DID,
+      p_did: item.Did,
       p_fy_year: item.fy_year,
       p_project: item.project,
       p_position: item.position,
       p_description: item.description,
       p_status: item.status,
+      p_wlink: item.website_link,
       p_str: 'UPD',
     });
   };
+
   const editimg = (item) => {
     setImg({
       p_sid: item.Sid,
-      p_digital_id: item.Digital_id,
-      p_position: item.position,
-      p_project: item.project,
+      p_positions: item.position,
+      p_projects: item.Digital_id,
       p_images: item.images,
       p_str: 'UPD',
     });
@@ -253,14 +213,42 @@ const CsaInput = () => {
     updateDatabaseWithNewOrder(updatedRowData);
   };
 
-  const updateDatabaseWithNewOrder = async (updatedRowData) => {
-    try {
-      await ApiService.UpdateRowOrder(updatedRowData);
-      console.log('Database updated with new row order');
-    } catch (error) {
-      console.error('Error updating database with new row order:', error);
-    }
+  const closeModal = () => {
+    setModalIsOpen(false);
+    setTableRes([]);
   };
+
+  const ActionButtonsRenderer = (props) => (
+    <div>
+      <button onClick={() => editItem(props.data)}><i class="fa fa-edit"></i></button>
+
+    </div>
+  );
+  const ActionButtonsRenderer1 = (props) => (
+    <div>
+
+      <button onClick={() => editimg(props.data)}><i class="fa fa-edit"></i></button>
+    </div>
+  );
+
+  const columnDefs = [
+    { headerName: '#', field: 'actions', cellRenderer: ActionButtonsRenderer, filter: false, sortable: false, minWidth: 50, maxWidth: 50 },
+    { field: 'index', headerName: 'SNO', sortable: true, filter: false, floatingFilter: true, minWidth: 50, maxWidth: 50, rowDrag: true },
+    { field: 'fy_year', headerName: 'FY YEAR', sortable: true, filter: true, floatingFilter: true, minWidth: 150, width: 150, maxWidth: 150 },
+    { field: 'project', headerName: 'PROJECT NAME', sortable: true, filter: true, floatingFilter: true, minWidth: 250, width: 250, maxWidth: 250 },
+    { field: 'position', headerName: 'POSITION', sortable: true, filter: true, floatingFilter: true, minWidth: 250, width: 250, maxWidth: 250 },
+    { field: 'description', headerName: 'DESCRIPTION', sortable: true, filter: true, floatingFilter: true, minWidth: 250, width: 250, maxWidth: 250 },
+    { field: 'status', headerName: 'STATUS', sortable: true, filter: true, floatingFilter: true, minWidth: 150, width: 150, maxWidth: 150 },
+    { field: 'website_link', headerName: 'WEBSITE LINK', sortable: true, filter: true, floatingFilter: true, minWidth: 150, width: 150, maxWidth: 150 },
+  ];
+
+  const columnDefs1 = [
+    { headerName: '#', field: 'actions', cellRenderer: ActionButtonsRenderer1, filter: false, sortable: false, minWidth: 50, maxWidth: 50 },
+    { field: 'index', headerName: 'SNO', sortable: true, filter: false, floatingFilter: true, minWidth: 50, maxWidth: 50, rowDrag: true },
+    { field: 'project', headerName: 'PROJECT NAME', sortable: true, filter: true, floatingFilter: true,minWidth: 500, maxWidth: 500, },
+    { field: 'images', headerName: 'IMAGES', sortable: true, filter: true, floatingFilter: true,minWidth: 450, maxWidth: 450,width:450 },
+    { field: 'position', headerName: 'POSITION', sortable: true, filter: true, floatingFilter: true },
+  ];
 
   return (
     <>
@@ -296,9 +284,10 @@ const CsaInput = () => {
                     <select name="p_position" id="p_position" required value={csab.p_position} onChange={handleInputChange}>
                       <option value="">Select Position</option>
                       {[...Array(12).keys()].map(i => (
-                        <option key={i+1} value={i+1}>{`POS-${i+1}`}</option>
+                        <option key={i + 1} value={i + 1}>{`POS-${i + 1}`}</option>
                       ))}
                     </select>
+                    <label htmlFor="p_position">Position</label>
                   </div>
                 </div>
                 <div className="col-3">
@@ -309,12 +298,19 @@ const CsaInput = () => {
                       <option value="Inprogress">Inprogress</option>
                       <option value="Completed">Completed</option>
                     </select>
+                    <label htmlFor="p_status">Status</label>
+                  </div>
+                </div>
+                <div className="col-3">
+                  <div className="input-wrapper">
+                    <input type="text" name="p_wlink" id="p_wlink" value={csab.p_wlink} onChange={handleInputChange} />
+                    <label htmlFor="p_wlink">Website Link</label>
                   </div>
                 </div>
                 <div className="col-3">
                   <div className="input-wrapper">
                     <input type="text" name="p_description" id="p_description" required value={csab.p_description} onChange={handleInputChange} />
-                    <label htmlFor="p_description">DESCRIPTION</label>
+                    <label htmlFor="p_description">Description</label>
                   </div>
                 </div>
                 <div className="col-2">
@@ -328,9 +324,9 @@ const CsaInput = () => {
               ref={gridRef}
               rowData={rowData}
               columnDefs={columnDefs}
-              pagination={true}
+              pagination
               paginationPageSize={20}
-              rowDragManaged={true}
+              rowDragManaged
               onRowDragEnd={onRowDragEnd}
             />
           </div>
@@ -344,6 +340,7 @@ const CsaInput = () => {
             <form className="formg" noValidate autoComplete="off" onSubmit={saveTutorialWithFile}>
               <div className="row">
                 <div className="col-3">
+                  <input type="text" name="p_sid" value={img.p_sid} onChange={handleInputChange} className="diano"/>
                   <div className="input-wrapper">
                     <select name="p_projects" id="p_projects" required value={img.p_projects} onChange={handleInputChange}>
                       <option value="">Select Project</option>
@@ -351,6 +348,7 @@ const CsaInput = () => {
                         <option key={project.value} value={project.value}>{project.label}</option>
                       ))}
                     </select>
+                    <label htmlFor="p_projects">Project</label>
                   </div>
                 </div>
                 <div className="col-3">
@@ -360,6 +358,21 @@ const CsaInput = () => {
                       <li key={index}>{name}</li>
                     ))}
                   </ul>
+                </div>
+                <div className="col-3">
+                {img.p_sid > 0 && (
+                  <div className="input-wrapper">
+
+                      <select name="p_positions" id="p_positions" required value={img.p_positions} onChange={handleInputChange}>
+                        <option value="">Select Position</option>
+                        {[...Array(12).keys()].map(i => (
+                          <option key={i + 1} value={i + 1}>{`POS-${i + 1}`}</option>
+                        ))}
+                      </select>
+
+                    <label htmlFor="p_positions">Position</label>
+                  </div>
+                      )}
                 </div>
                 <div className="col-2">
                   <button type="submit" name="save" value="Save" className="submitgo" id="btSubmit">Submit</button>
@@ -372,9 +385,9 @@ const CsaInput = () => {
               ref={gridRef}
               rowData={rowData1}
               columnDefs={columnDefs1}
-              pagination={true}
+              pagination
               paginationPageSize={20}
-              rowDragManaged={true}
+              rowDragManaged
               onRowDragEnd={onRowDragEnd}
             />
           </div>

@@ -82,3 +82,15 @@ span.spc {
 .logn{
     height: 35px;
 }
+.ag-header-container {
+    width: 100% !important;
+}
+.ag-header-row.ag-header-row-column{
+    width: 100% !important;
+}
+.ag-header-row.ag-header-row-column-filter {
+    width: 100% !important;
+}
+.ag-center-cols-container{
+    width: 100% !important;
+}

@@ -65,6 +65,11 @@ class ApiService extends React.Component {
     return response.data;
   }
 
+  static async Getslidermodalimg(data) {
+    // Your logic to post/manage CSA input
+    const response = await http.post('/kpi/PostDigitalDashboardSlideList', data);
+    return response.data;
+  }
   static async PostDigitalDashboardinput(data) {
     // Your logic to post/manage CSA input
     const response = await http.post('/kpi/PostDigitalDashboardinput', data);
